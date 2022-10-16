@@ -82,6 +82,19 @@ namespace Demo0_0
          
         }
 
+        public void DialogPanel_Dialog(Sprite sprite)
+        {
+            DialogPanel_Show();
+            dialogPanel.SetHead(sprite);
+
+        }
+        public void DialogPanel_Dialog( string name, string dialog)
+        {
+            DialogPanel_Show();
+            dialogPanel.SetText(String.Format("{0}：“{1}”", name, dialog));
+
+        }
+
         /// <summary>
         /// 选择
         /// </summary>
