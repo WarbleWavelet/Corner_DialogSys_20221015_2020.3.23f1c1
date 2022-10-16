@@ -46,9 +46,35 @@ namespace Demo0_0
         {
             if (Input.GetKeyDown(KeyCode.Space))
             {
-              
                 DialogMgr.Instance.OnNextBtnClick();
             }
+
+            if (Input.GetKeyDown(KeyCode.Alpha1))
+            {
+                DialogMgr.Instance.m_speaker = "小Y老师"; Log();
+            }
+            if (Input.GetKeyDown(KeyCode.Alpha2))
+            {
+                DialogMgr.Instance.m_speaker = "Mono老师"; Log();
+            }
+            if (Input.GetKeyDown(KeyCode.Alpha3))
+            {
+                DialogMgr.Instance.m_speaker = "稀粥老师"; Log();
+            }
+            if (Input.GetKeyDown(KeyCode.Alpha4))
+            {
+                DialogMgr.Instance.m_speaker = "Trigger老师"; Log();
+            }
+            if (Input.GetKeyDown(KeyCode.Alpha5))
+            {
+                DialogMgr.Instance.m_speaker = "SiKi老师"; Log();
+            }
+        }
+
+        void Log()
+        {
+
+            Debug.LogFormat("{0}", DialogMgr.Instance.m_speaker);
         }
         #endregion 
 

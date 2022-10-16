@@ -37,7 +37,7 @@ namespace Demo0_0
         }
         void Start()
         {
-            
+            m_btnNext.onClick.AddListener(DialogMgr.Instance.OnNextBtnClick);
         }
         
         void Update()

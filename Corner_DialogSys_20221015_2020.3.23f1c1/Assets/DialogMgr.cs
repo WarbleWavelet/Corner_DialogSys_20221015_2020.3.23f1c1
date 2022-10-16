@@ -20,18 +20,17 @@ namespace Demo0_0
 
 
         public string dialogDataFilePath="Data/Txt/Dialog"; //不加后缀
-
-
         string[] dialogRows;                        //对话内容的每一行
-
         public List<Sprite> headLst = new List<Sprite>(); //保存角色的所有头像
         Dictionary<string, Sprite> headDic = new Dictionary<string, Sprite>(); //保存角色名字和头像的对应关系
 
 
-       public int m_curId = 1;                                         //当前对话的ID
-        [HideInInspector] public string m_curNpc="同龄人";              //当前对话的NPC名字，对话第一个NPC
-        [HideInInspector] public string m_speaker = "同龄人";        //excel中NPC的名字
-        [HideInInspector] public const string m_player = "小白";        //excel中NPC的名字
+
+
+       public int m_tarId = 1;                                         //当前对话的ID
+       /** [HideInInspector]//**/ public string m_tarNpc= "同龄人";         //按主线当前要找的npc
+       /** [HideInInspector]//**/ public string m_speaker = "小白";        //你目前找到的npc
+       /** [HideInInspector]//**/ public const string m_player = "小白";        //主角
 
         public GameObject optionButtonPrefab;       //选项按钮的预制体
         public Transform buttonGroup;               //选项按钮的父物体
@@ -57,6 +56,7 @@ namespace Demo0_0
 
             LoadAllSprite( headLst, "Textures/People/", "-Head");
             InitDic(headLst, headDic, "-Head");
+           
 
         }
 
@@ -71,7 +71,11 @@ namespace Demo0_0
         #region 辅助
 
 
+        void Log()
+        {
 
+            Debug.LogFormat("m_speaker:{0}\tm_tarNpc:{1}\tm_curId:{2}", m_speaker,m_tarNpc,m_tarId );
+        }
 
 
         public  void ShowDialogRow()         //用文件中的每一行显示对话框中的内容
@@ -82,14 +86,16 @@ namespace Demo0_0
                 #,2,同龄人,SiKi学院就有啊,同龄人,3,,
                 #,3,小白,视频内容适合入门吗？,同龄人,4,,
                 #,4,同龄人,Unity入门、进阶都有，有学习路线，找SiKi客服要学习路线，根据学习路线学习,同龄人,5,,
-                
                 #,5,小白,好的，谢谢！,SiKi客服,6,成长值@10,小白
                 #,6,小白,老师，请问有Unity的学习路线吗？,SiKi客服,7,,
                 #,7,SiKi客服,https://zhuanlan.zhihu.com/p/540245002,SiKi客服,8,成长值@10,小白
                 #,8,小白,SiKi学院的视频有免费的吗？,SiKi客服,9,,
                 #,9,SiKi客服,有免费的，也有收费的，收费需要加入A计划，你要加入A计划吗？,SiKi客服,10,,
+
+
                 &,10,,加入,SiKi客服,12,成长值@30,小白
                 &,11,,不加入,SiKi客服,13,成长值@5,
+
                 #,12,SiKi客服,加入A计划可以观看所属方向的所有收费课程以及有效期内更新的所有收费课程！,SiKi客服,13,,
                 #,13,SiKi客服,有问题可以QQ咨询客服喔，QQ:88137944，接下来你可以先找小Y老师学习,小Y老师,14,成长值@10,小白
 
@@ -112,83 +118,75 @@ namespace Demo0_0
                 #,30,SiKi老师,加油！SiKi学院时刻欢迎你！,SiKi老师,31,,
                 END,31,,,,,,
             **/
-            if (m_curId >= dialogRows.Length)//测试时由外界控制m_curId
+            if (m_tarId >= dialogRows.Length)//测试时由外界控制m_curId
             {
-                m_curId = dialogRows.Length - 1;
+                m_tarId = dialogRows.Length - 1;
                 return;
             }
             List<int> optIdLst = new List<int>();
             for (int i = 0; i < dialogRows.Length; i++)     //遍历每一行中的内容
             {
-                if (m_curId != i) //m_curId初始=1，跳掉标题行
+                if (m_tarId != i) //m_curId初始=1，跳掉标题行
                 {
                     continue;
                 }
                 string[] cells = dialogRows[i].Split('|');  //读取每一行用逗号分割的内容
                 string tag = cells[0];
                 int curId = int.Parse(cells[1]);
-                string speaker = cells[2];     //说话的
-                string dialog = cells[3];   //话
-                string nxtNpc = cells[4];       //听话的
-                int.TryParse(cells[5], out int nxtId);
-                string eft = cells[6];      //作用
-                string eftTar = cells[7];   //作用对象
-                if (tag == "#")
-                {
-                    Debug.Log("#");
-                    UIMgr.Instance.DialogPanel_Show(headDic[speaker], speaker, dialog);
-
-
-                    m_curId = nxtId; //更新当前的对话索引
-                    if (nxtNpc != m_player)// 除了主角，每次都更新下当前npc
-                    {
-                        m_curNpc = nxtNpc;
-                    }
-                    return;
-                }
-                else if (tag == "&")
-                {     
-                    Debug.Log("&");
-
-                     m_curId++;
-                }
-                else if (tag == "END")
+                if (tag == "END")
                 {
                     Debug.Log("END");
+                    UIMgr.Instance.DialogPanel_Show(false);
+                    return;
                 }
-
+                else
+                { 
+                    string speaker = cells[2];     //说话的
+                    string dialog = cells[3];   //话
+                    string nxtNpc = cells[4];       //听话的
+                    int nxtId=int.Parse(cells[5]);
+                    string eft = cells[6];      //作用
+                    string eftTar = cells[7];   //作用对象
+                    if (curId != m_tarId && (speaker!=m_tarNpc || speaker!=m_player))//还没到说这句话的时候，或人
+                    {
+                        return;
+                    }
+                    if (tag == "#")
+                    {
+                        if(speaker==m_tarNpc)
+                        UIMgr.Instance.DialogPanel_Dialog(headDic[speaker], speaker, dialog);
+                        m_speaker = speaker;
+                        m_tarId = nxtId; //更新当前的对话索引
+                        m_tarNpc = nxtNpc;
+                        Log();
+                        return;
+                    }
+                    else if (tag == "&")
+                    {
+                        Debug.Log("&");
+                        string[] opt1 = cells;
+                        string[] opt2 = dialogRows[i+1].Split('|');
+                        UIMgr.Instance.DialogPanel_Chose(true, opt1[3], opt2[3],
+                            () => {
+                                // 选项时speaker不变
+                                m_tarNpc = nxtNpc; //选项中人名不可能是主角，所以不判断
+                                m_tarId = nxtId;
+                                 OnNextBtnClick();
+                                UIMgr.Instance.DialogPanel_Chose(false);
+                            },
+                            () => {
+                                // 选项时speaker不变
+                                m_tarNpc = opt2[4];
+                                m_tarId =int.Parse( opt2[5]);
+                                OnNextBtnClick();
+                                UIMgr.Instance.DialogPanel_Chose(false); 
+                            });
+                        i++; //跳过
+                        Log();
+                        return;
+                    }
+                }
             }
-           /**
-            return;
-                for (int i = 0; i < dialogRows.Length; i++)     //遍历每一行中的内容
-            {
-                    if ( speaker == m_curNpc)
-                    {         
-                        // UpdateText();
-
-
-
-
-                        //if (eft != "")
-                        //{
-                        //    string[] effect = cells[6].Split('@');
-                        //    Debug.LogFormat("{0}增加了{1}",effect[0],effect[1]);
-                        //    //  ShowEffectAttri(effect[0], int.Parse(effect[1]));
-                        //}
-                    }
-                    else if (tag == "&" && m_nxtNpc == m_curNpc)
-                    {
-                        UIMgr.Instance.DialogPanel_NextBtn(false);
-                        // GenerateOptionButton(i);
-                        break;
-                    }
-                    else  if (tag == "END")
-                    {
-                        UIMgr.Instance.DialogPanel_Show(false);
-                    }
-                }
-
-             //**/                                    
         }
 
 
@@ -196,7 +194,8 @@ namespace Demo0_0
 
         public void OnNextBtnClick() //显示下一个对话内容按钮被点击
         {
-            if (m_speaker == m_curNpc || m_speaker==m_player) //对应的npc说话||本人说话
+            Log();
+            if (m_speaker == m_tarNpc || m_speaker==m_player) //对应的npc说话||本人说话
             {
                 ShowDialogRow();
             }
